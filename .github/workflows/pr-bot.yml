@@ -1,0 +1,28 @@
+name: PR bot GitHub APP
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, review_requested, review_request_removed, assigned, unassigned, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
+          load: true
+          tags: pr-bot-cli:latest
+
+      - name: Run CLI in Docker container
+        run: |
+          docker run --rm pr-bot-cli:latest
