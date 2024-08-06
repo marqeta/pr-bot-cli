@@ -26,3 +26,6 @@ jobs:
       - name: Run CLI in Docker container
         run: |
           docker run --rm pr-bot-cli:latest
+
+      - name: Invoke action
+        uses: marqeta/pr-bot-cli@main
