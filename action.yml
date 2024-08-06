@@ -1,0 +1,6 @@
+name: 'pr-boy-lite'
+description: 'A GitHub Action that automatically approves PR that meets certain requirement'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+
