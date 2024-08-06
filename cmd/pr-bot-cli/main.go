@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v50/github"
+	"github.com/marqeta/pr-bot-cli/internal/pullrequest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
@@ -46,6 +48,11 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		fmt.Println("GITHUB_EVENT_PATH not set")
 		os.Exit(1)
 	}
+	eventName := os.Getenv("GITHUB_EVENT_NAME")
+	if eventName == "" {
+		fmt.Println("GITHUB_EVENT_NAME not set")
+		os.Exit(1)
+	}
 
 	// Read the event payload from the json file
 	eventPayload, err := os.ReadFile(eventPath)
@@ -61,8 +68,8 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	eventName := os.Getenv("GITHUB_EVENT_NAME")
+	handlerV2 := pullrequest.NewEventHandler(nil)
+	d := pullrequest.NewDispatcher(handlerV2, nil)
 
-	fmt.Printf("event name %s\n event payload: %s\n", eventName, string(eventPayload))
-	// todo: call dispatcher
+	err = d.Dispatch(context.Background(), eventName, &event)
 }
