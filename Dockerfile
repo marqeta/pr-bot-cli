@@ -33,4 +33,4 @@ USER pr-bot
 
 WORKDIR /opt/app
 
-ENTRYPOINT ["/opt/app/pr-bot-cli", "--config", "/opt/app/config/dev.yaml"]
+ENTRYPOINT ["/opt/app/pr-bot-cli", "evaluate", "--config", "/opt/app/config/dev.yaml"]
