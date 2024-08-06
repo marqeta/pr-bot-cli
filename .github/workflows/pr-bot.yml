@@ -23,13 +23,13 @@ jobs:
           load: true
           tags: pr-bot-cli:latest
 
-#      - name: Run Current Feature Branch
-#        run: |
-#          docker run \
-#          -e GITHUB_EVENT_PATH="${{ github.event_path }}" \
-#          -e GITHUB_EVENT_NAME="${{ github.event_name }}" \
-#          -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-#          --rm pr-bot-cli:latest
+      - name: Run Current Feature Branch
+        run: |
+          docker run \
+          -e GITHUB_EVENT_PATH="${{ github.event_path }}" \
+          -e GITHUB_EVENT_NAME="${{ github.event_name }}" \
+          -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+          --rm pr-bot-cli:latest
 
       - name: Invoke action
         uses: marqeta/pr-bot-cli@main
