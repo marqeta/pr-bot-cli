@@ -7,6 +7,9 @@ import (
 	"os"
 
 	"github.com/google/go-github/v50/github"
+	"github.com/marqeta/pr-bot-cli/internal/metrics"
+	pgithub "github.com/marqeta/pr-bot/github"
+	pid "github.com/marqeta/pr-bot/id"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -30,7 +33,6 @@ func main() {
 		Short: "Evaluate a PR",
 		Run:   evaluatePullRequest,
 	}
-
 	rootCmd.AddCommand(evaluateCmd)
 
 	pflag.StringVarP(&configFile, "config", "c", "", "Path to the configuration file")
@@ -70,14 +72,21 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// Get the PR number, repo owner and repo name from the event
-	prNumber := event.GetPullRequest().GetNumber()
-	repoOwner := event.GetRepo().GetOwner().GetLogin()
-	repoName := event.GetRepo().GetName()
-
-	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, prNumber, repoOwner, repoName)
+	id := pid.PR{
+		Owner:        event.GetRepo().GetOwner().GetLogin(),
+		Repo:         event.GetRepo().GetName(),
+		Number:       event.GetPullRequest().GetNumber(),
+		NodeID:       event.GetPullRequest().GetNodeID(),
+		RepoFullName: event.GetRepo().GetFullName(),
+		Author:       event.GetPullRequest().GetUser().GetLogin(),
+		URL:          event.GetPullRequest().GetHTMLURL(),
+	}
+	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, id.Number, id.Owner, id.RepoFullName)
 
 	// Set up the GitHub clients
+	v3, v4 := setupGHEClients()
+	emitter := metrics.NewEmitter()
+	ghAPI := pgithub.NewAPI("localhost", 8080, v3, v4, emitter)
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
@@ -87,9 +96,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 
 	v3Client, _ := githubclient.CreateGithubClients(cmd.Context(), tok)
 
-	// Create a comment
-	comment := &github.IssueComment{Body: github.String("👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")}
-	_, _, err = v3Client.Issues.CreateComment(context.Background(), repoOwner, repoName, prNumber, comment)
+	err = ghAPI.IssueComment(context.Background(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
 	if err != nil {
 		log.Error().Msgf("Error creating comment: %v", err)
 		os.Exit(1)
