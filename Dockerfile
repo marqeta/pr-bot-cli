@@ -19,6 +19,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pr-bot-cli ./cmd/
 # Start a new stage from debian base image
 FROM debian:12.5-slim
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get clean
+
 RUN mkdir -p /opt/app/bundles
 
 # Copy the Pre-built binary file from the previous stage
