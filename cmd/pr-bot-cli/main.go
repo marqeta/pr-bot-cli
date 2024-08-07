@@ -69,6 +69,9 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	eventName := os.Getenv("GITHUB_EVENT_NAME")
+	fmt.Printf("Event name: %s\n, Event: %v\n", eventName, event)
+
 	// Get the PR number, repo owner and repo name from the event
 	prNumber := event.GetPullRequest().GetNumber()
 	repoOwner := event.GetRepo().GetOwner().GetLogin()
@@ -93,6 +96,7 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
+	fmt.Printf("for testing: %s\n", tok)
 
 	// Create a custom HTTP client with SSL verification disabled
 	tr := &http.Transport{
