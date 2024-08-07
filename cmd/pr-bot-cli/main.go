@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v50/github"
+	"github.com/rs/zerolog/log"
+	"github.com/shurcooL/githubv4"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/oauth2"
 	"os"
 )
 
@@ -32,6 +36,8 @@ func main() {
 	pflag.StringVarP(&configFile, "config", "c", "", "Path to the configuration file")
 	pflag.Parse()
 	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
+
+	setupGHEClients()
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -65,4 +71,39 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("event name %s\n event payload: %v\n", eventName, event)
 	// todo: call dispatcher
+}
+
+func setupGHEClients() (*github.Client, *githubv4.Client) {
+	log.Info().Msg("Setting up GHE clients")
+	tok := os.Getenv("GITHUB_TOKEN")
+	if tok == "" {
+		log.Error().Msg("Error retrieving github token")
+		os.Exit(1)
+	}
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: tok},
+	)
+	httpClient := oauth2.NewClient(context.Background(), ts)
+
+	// Initialize v3 client
+	v3 := github.NewClient(httpClient)
+	// Test the connection by fetching the authenticated user's details
+	user, _, err := v3.Users.Get(context.Background(), "")
+	if err != nil {
+		log.Error().Msgf("Error testing GitHub v3 client connection: %v", err)
+		os.Exit(1)
+	}
+	log.Info().Msgf("Connected to GitHub as user: %s", *user.Login)
+
+	// Initialize v4 client
+	v4 := githubv4.NewClient(httpClient)
+	// Test the connection by fetching the authenticated user's details
+	user, _, err = v3.Users.Get(context.Background(), "")
+	if err != nil {
+		log.Error().Msgf("Error testing GitHub v4 client connection: %v", err)
+		os.Exit(1)
+	}
+	log.Info().Msgf("Connected to GitHub as user: %s", *user.Login)
+
+	return v3, v4
 }
