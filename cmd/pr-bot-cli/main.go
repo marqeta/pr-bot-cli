@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"os"
-
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pid "github.com/marqeta/pr-bot/id"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
+	pmetrics "github.com/marqeta/pr-bot/metrics"
+	"github.com/marqeta/pr-bot/pullrequest/review"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -87,6 +88,16 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	v3, v4 := setupGHEClients()
 	emitter := metrics.NewEmitter()
 	ghAPI := pgithub.NewAPI("localhost", 8080, v3, v4, emitter)
+	reviewer := setupReviewer(ghAPI, emitter)
+
+	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
+	if err != nil {
+		log.Error().Msgf("Error creating comment: %v", err)
+		os.Exit(1)
+	}
+}
+
+func setupGHEClients() (*github.Client, *githubv4.Client) {
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
@@ -96,9 +107,18 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 
 	v3Client, _ := githubclient.CreateGithubClients(cmd.Context(), tok)
 
-	err = ghAPI.IssueComment(context.Background(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
-	if err != nil {
-		log.Error().Msgf("Error creating comment: %v", err)
-		os.Exit(1)
+	httpClient := &http.Client{
+		Transport: &oauth2.Transport{
+			Source: ts,
+			Base:   tr,
+		},
 	}
+}
+
+func setupReviewer(api pgithub.API, emitter pmetrics.Emitter) review.Reviewer {
+	log.Info().Msg("Setting up reviewer")
+	// todo: mutex -> dedup -> precond -> rate limited -> reviewer
+	base := review.NewReviewer(api, emitter)
+	precond := review.NewPreCondValidationReviewer(base)
+	return precond
 }
