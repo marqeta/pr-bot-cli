@@ -1,13 +1,17 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
+	"github.com/marqeta/pr-bot-cli/internal/metrics"
+	pgithub "github.com/marqeta/pr-bot/github"
+	pid "github.com/marqeta/pr-bot/id"
+	pmetrics "github.com/marqeta/pr-bot/metrics"
+	"github.com/marqeta/pr-bot/pullrequest/review"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,7 +34,6 @@ func main() {
 		Short: "Evaluate a PR",
 		Run:   evaluatePullRequest,
 	}
-
 	rootCmd.AddCommand(evaluateCmd)
 
 	pflag.StringVarP(&configFile, "config", "c", "", "Path to the configuration file")
@@ -70,28 +73,39 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	// Get the PR number, repo owner and repo name from the event
-	prNumber := event.GetPullRequest().GetNumber()
-	repoOwner := event.GetRepo().GetOwner().GetLogin()
-	repoName := event.GetRepo().GetName()
+	id := pid.PR{
+		Owner:        event.GetRepo().GetOwner().GetLogin(),
+		Repo:         event.GetRepo().GetName(),
+		Number:       event.GetPullRequest().GetNumber(),
+		NodeID:       event.GetPullRequest().GetNodeID(),
+		RepoFullName: event.GetRepo().GetFullName(),
+		Author:       event.GetPullRequest().GetUser().GetLogin(),
+		URL:          event.GetPullRequest().GetHTMLURL(),
+	}
+	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, id.Number, id.Owner, id.RepoFullName)
 
-	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, prNumber, repoOwner, repoName)
-
-	// Set up the GitHub clients
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
+	v3Client, v4Client := githubclient.CreateGithubClients(cmd.Context(), tok)
+	emitter := metrics.NewEmitter()
+	ghAPI := pgithub.NewAPI("localhost", 8080, v3Client, v4Client, emitter)
+	reviewer := setupReviewer(ghAPI, emitter)
 
-	v3Client, _ := githubclient.CreateGithubClients(cmd.Context(), tok)
-
-	// Create a comment
-	comment := &github.IssueComment{Body: github.String("👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")}
-	_, _, err = v3Client.Issues.CreateComment(context.Background(), repoOwner, repoName, prNumber, comment)
+	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
 	if err != nil {
 		log.Error().Msgf("Error creating comment: %v", err)
 		os.Exit(1)
 	}
+}
+
+func setupReviewer(api pgithub.API, emitter pmetrics.Emitter) review.Reviewer {
+	log.Info().Msg("Setting up reviewer")
+	// todo: mutex -> dedup -> precond -> rate limited -> reviewer
+	base := review.NewReviewer(api, emitter)
+	precond := review.NewPreCondValidationReviewer(base)
+	return precond
 }
