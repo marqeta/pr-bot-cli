@@ -1,15 +1,15 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"github.com/google/go-github/v50/github"
+	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pid "github.com/marqeta/pr-bot/id"
-	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	pmetrics "github.com/marqeta/pr-bot/metrics"
 	"github.com/marqeta/pr-bot/pullrequest/review"
 	"github.com/rs/zerolog/log"
@@ -84,34 +84,21 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, id.Number, id.Owner, id.RepoFullName)
 
-	// Set up the GitHub clients
-	v3, v4 := setupGHEClients()
-	emitter := metrics.NewEmitter()
-	ghAPI := pgithub.NewAPI("localhost", 8080, v3, v4, emitter)
-	reviewer := setupReviewer(ghAPI, emitter)
-
-	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
-	if err != nil {
-		log.Error().Msgf("Error creating comment: %v", err)
-		os.Exit(1)
-	}
-}
-
-func setupGHEClients() (*github.Client, *githubv4.Client) {
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
+	v3Client, v4Client := githubclient.CreateGithubClients(cmd.Context(), tok)
+	emitter := metrics.NewEmitter()
+	ghAPI := pgithub.NewAPI("localhost", 8080, v3Client, v4Client, emitter)
+	reviewer := setupReviewer(ghAPI, emitter)
 
-	v3Client, _ := githubclient.CreateGithubClients(cmd.Context(), tok)
-
-	httpClient := &http.Client{
-		Transport: &oauth2.Transport{
-			Source: ts,
-			Base:   tr,
-		},
+	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
+	if err != nil {
+		log.Error().Msgf("Error creating comment: %v", err)
+		os.Exit(1)
 	}
 }
 

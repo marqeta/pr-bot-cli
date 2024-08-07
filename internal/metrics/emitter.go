@@ -2,9 +2,10 @@ package metrics
 
 import (
 	"context"
+	"time"
+
 	pmetrics "github.com/marqeta/pr-bot/metrics"
 	httpmetrics "github.com/slok/go-http-metrics/metrics"
-	"time"
 )
 
 type NoopEmitter struct{}
