@@ -77,7 +77,7 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
-		log.Error().Msg("Error retrieving github token")
+		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
 	ts := oauth2.StaticTokenSource(
