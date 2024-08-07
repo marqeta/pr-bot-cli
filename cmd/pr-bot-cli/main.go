@@ -39,8 +39,6 @@ func main() {
 	pflag.Parse()
 	rootCmd.Flags().AddFlagSet(pflag.CommandLine)
 
-	setupGHEClients()
-
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		return
