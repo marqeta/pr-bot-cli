@@ -61,8 +61,8 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	eventName := os.Getenv("GITHUB_NAME")
+	eventName := os.Getenv("GITHUB_EVENT_NAME")
 
-	fmt.Printf("event name %s\n event payload: %v\n", eventName, eventPayload)
+	fmt.Printf("event name %s\n event payload: %v\n", eventName, event)
 	// todo: call dispatcher
 }
