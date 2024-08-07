@@ -31,5 +31,15 @@ jobs:
 #          -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
 #          --rm pr-bot-cli:latest
 
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.'
+            })
+
       - name: Invoke action
         uses: marqeta/pr-bot-cli@main
