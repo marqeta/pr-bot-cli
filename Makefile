@@ -1,3 +1,5 @@
+GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
+
 .PHONY: ci
 ci: fmt vet lint build test
 
@@ -24,6 +26,7 @@ build: clean
 .PHONY: fmt
 fmt:
 	go fmt --mod=vendor ./...
+	goimports -l -w $(GOFMT_FILES)
 
 .PHONY: run
 run: build
