@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v50/github"
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/oauth2"
+	"net/http"
 	"os"
 )
 
@@ -67,10 +69,21 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	eventName := os.Getenv("GITHUB_EVENT_NAME")
+	// Get the PR number, repo owner and repo name from the event
+	prNumber := event.GetPullRequest().GetNumber()
+	repoOwner := event.GetRepo().GetOwner().GetLogin()
+	repoName := event.GetRepo().GetName()
 
-	fmt.Printf("event name %s\n event payload: %v\n", eventName, event)
-	// todo: call dispatcher
+	// Set up the GitHub clients
+	v3Client, _ := setupGHEClients()
+
+	// Create a comment
+	comment := &github.IssueComment{Body: github.String("👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")}
+	_, _, err = v3Client.Issues.CreateComment(context.Background(), repoOwner, repoName, prNumber, comment)
+	if err != nil {
+		log.Error().Msgf("Error creating comment: %v", err)
+		os.Exit(1)
+	}
 }
 
 func setupGHEClients() (*github.Client, *githubv4.Client) {
@@ -80,30 +93,22 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
+
+	// Create a custom HTTP client with SSL verification disabled
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: tok},
 	)
-	httpClient := oauth2.NewClient(context.Background(), ts)
+
+	tc := oauth2.NewClient(context.Background(), ts)
+	tc.Transport = tr
 
 	// Initialize v3 client
-	v3 := github.NewClient(httpClient)
-	// Test the connection by fetching the authenticated user's details
-	user, _, err := v3.Users.Get(context.Background(), "")
-	if err != nil {
-		log.Error().Msgf("Error testing GitHub v3 client connection: %v", err)
-		os.Exit(1)
-	}
-	log.Info().Msgf("Connected to GitHub as user: %s", *user.Login)
-
+	v3 := github.NewClient(tc)
 	// Initialize v4 client
-	v4 := githubv4.NewClient(httpClient)
-	// Test the connection by fetching the authenticated user's details
-	user, _, err = v3.Users.Get(context.Background(), "")
-	if err != nil {
-		log.Error().Msgf("Error testing GitHub v4 client connection: %v", err)
-		os.Exit(1)
-	}
-	log.Info().Msgf("Connected to GitHub as user: %s", *user.Login)
-
+	v4 := githubv4.NewClient(tc)
 	return v3, v4
 }
