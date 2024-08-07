@@ -12,10 +12,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-#      - name: Invoke local action # for testing workflow change in the feature branch
-#        uses: ./ # uses the local action defined by action.yml in the root of the repository
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Invoke local action # for testing workflow change in the feature branch
+        uses: ./ # uses the local action defined by action.yml in the root of the repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Invoke action
         uses: marqeta/pr-bot-cli@main
