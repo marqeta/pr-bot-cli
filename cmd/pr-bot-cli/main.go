@@ -92,7 +92,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 	v3Client, v4Client := githubclient.CreateGithubClients(cmd.Context(), tok)
 	emitter := metrics.NewEmitter()
-	ghAPI := pgithub.NewAPI("localhost", 8080, v3Client, v4Client, emitter)
+	ghAPI := githubclient.NewAPI(v3Client, v4Client, emitter)
 	reviewer := setupReviewer(ghAPI, emitter)
 
 	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
