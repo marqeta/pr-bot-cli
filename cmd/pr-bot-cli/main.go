@@ -109,13 +109,17 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 		&oauth2.Token{AccessToken: tok},
 	)
 
-	tc := oauth2.NewClient(context.Background(), ts)
-	tc.Transport = tr
+	httpClient := &http.Client{
+		Transport: &oauth2.Transport{
+			Source: ts,
+			Base:   tr,
+		},
+	}
 
 	// Initialize v3 client
-	v3 := github.NewClient(tc)
+	v3 := github.NewClient(httpClient)
 
 	// Initialize v4 client
-	v4 := githubv4.NewClient(tc)
+	v4 := githubv4.NewClient(httpClient)
 	return v3, v4
 }
