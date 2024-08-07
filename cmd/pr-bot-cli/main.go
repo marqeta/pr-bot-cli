@@ -74,12 +74,12 @@ func evaluatePullRequest(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Event name: %s\n, Event Detail: %v\n", eventName, event)
-
 	// Get the PR number, repo owner and repo name from the event
 	prNumber := event.GetPullRequest().GetNumber()
 	repoOwner := event.GetRepo().GetOwner().GetLogin()
 	repoName := event.GetRepo().GetName()
+
+	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, prNumber, repoOwner, repoName)
 
 	// Set up the GitHub clients
 	v3Client, _ := setupGHEClients()
@@ -100,7 +100,7 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
-	fmt.Printf("for testing: %s\n", tok)
+	fmt.Printf("for testing: %s....%s\n", tok[:5], tok[len(tok)-5:])
 
 	// Create a custom HTTP client with SSL verification disabled
 	tr := &http.Transport{
@@ -116,13 +116,6 @@ func setupGHEClients() (*github.Client, *githubv4.Client) {
 
 	// Initialize v3 client
 	v3 := github.NewClient(tc)
-	// Test the connection by getting the authenticated user
-	user, _, err := v3.Users.Get(context.Background(), "")
-	if err != nil {
-		log.Error().Msgf("Error getting user: %v", err)
-		os.Exit(1)
-	}
-	log.Info().Msgf("Authenticated as user: %s", *user.Login)
 
 	// Initialize v4 client
 	v4 := githubv4.NewClient(tc)
