@@ -2,17 +2,34 @@ package reportManager
 
 import (
 	"context"
+	"github.com/marqeta/pr-bot/opa/input"
 
 	"github.com/marqeta/pr-bot/opa/evaluation"
 )
 
-type liteReportBuilder struct{}
+type ReportBuilder struct{}
+
+func (r ReportBuilder) AddModuleResult(module string, result evaluation.Result) {
+	return
+}
+
+func (r ReportBuilder) SetInput(input *input.Model) {
+	return
+}
+
+func (r ReportBuilder) SetOutcome(result evaluation.Result) {
+	return
+}
+
+func (r ReportBuilder) GetReport() evaluation.Report {
+	return evaluation.Report{}
+}
 
 type ReportManager struct {
 }
 
 func (rm *ReportManager) NewReportBuilder(ctx context.Context, pr, reqID, deliveryID string) evaluation.ReportBuilder {
-	return nil
+	return ReportBuilder{}
 }
 
 func (rm *ReportManager) GetReport(ctx context.Context, pr, deliveryID string) (*evaluation.Report, error) {
