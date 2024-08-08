@@ -111,25 +111,19 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	shouldHandle, err := eventFilter.ShouldHandle(cmd.Context(), id)
-	if err != nil {
-		log.Error().Msgf("Error invoking event filter: %v", err)
-		os.Exit(1)
-	}
-	log.Info().Msgf("ShouldHandle: %v", shouldHandle)
-
-	oap := setUpOPAEvaluator(ghAPI)
+	opa := setUpOPAEvaluator(ghAPI)
 	ghe := input.ToGHE(&event)
-	opaResult, err := oap.Evaluate(cmd.Context(), ghe)
+	opaResult, err := opa.Evaluate(cmd.Context(), ghe)
 	log.Info().Msg(fmt.Sprintf("OPA Result: %v", opaResult))
 
 	reviewer := setupReviewer(ghAPI, emitter)
-	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
+	handler := pullrequest.NewEventHandler(opa, reviewer, emitter)
+	d := pullrequest.NewDispatcher(handler, eventFilter, emitter)
+	err = d.Dispatch(cmd.Context(), "", eventName, &event)
 	if err != nil {
-		log.Error().Msgf("Error creating comment: %v", err)
+		log.Error().Msgf("Error reviewing the PR: %v", err)
 		os.Exit(1)
 	}
-
 }
 
 func setupEventFilter(cfg *pullrequest.RepoFilterCfg, api pgithub.API) (pullrequest.EventFilter, error) {
