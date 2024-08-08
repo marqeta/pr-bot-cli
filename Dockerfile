@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y curl && \
 COPY ./bundles ./bundles
 
 # Attempt to build the bundles
-RUN ./opa build ./bundles -o /app/bundles.tar.gz
+RUN ./opa build ./bundles -o /app/pr-bot-policy.tar.gz
 
 # Start a new stage from debian base image
 FROM debian:12.5-slim
@@ -42,7 +42,7 @@ RUN mkdir -p /opt/app/bundles
 COPY --from=builder /app/pr-bot-cli /opt/app/pr-bot-cli
 
 # Copy the OPA bundles tar ball
-COPY --from=opa-builder /app/bundles.tar.gz /opt/app/bundles/bundles.tar.gz
+COPY --from=opa-builder /app/pr-bot-policy.tar.gz /opt/app/bundles/pr-bot-policy.tar.gz
 
 # Copy the config directory
 COPY --from=builder /app/config /opt/app/config

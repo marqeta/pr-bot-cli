@@ -117,7 +117,10 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 	log.Info().Msgf("ShouldHandle: %v", shouldHandle)
 
-	setUpOPAEvaluator(ghAPI)
+	oap := setUpOPAEvaluator(ghAPI)
+	ghe := input.ToGHE(&event)
+	opaResult, err := oap.Evaluate(cmd.Context(), ghe)
+	log.Info().Interface("decision", opaResult).Msg("opa evaluation complete")
 
 	reviewer := setupReviewer(ghAPI, emitter)
 	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
@@ -153,7 +156,7 @@ const (
 	serviceName = "pr-bot"
 	env         = "github-action"
 	bundleRoot  = "/opt/app/bundles"
-	bundleFile  = "bundle.tar.gz"
+	bundleFile  = "pr-bot-policy.tar.gz"
 )
 
 func setUpOPAEvaluator(api pgithub.API) opa.Evaluator {
