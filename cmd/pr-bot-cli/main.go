@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/marqeta/pr-bot/opa/client"
+	"github.com/open-policy-agent/opa/sdk"
 	"os"
 
 	"github.com/google/go-github/v50/github"
@@ -136,4 +140,40 @@ func setupReviewer(api pgithub.API, emitter pmetrics.Emitter) review.Reviewer {
 	base := review.NewReviewer(api, emitter)
 	precond := review.NewPreCondValidationReviewer(base)
 	return precond
+}
+
+func setUpOPAClient() client.Client {
+	const (
+		serviceName = "pr-bot"
+		env         = "github-action"
+		// bundleRoot  = "/opt/app/bundles"
+		bundleRoot = "/Users/jhe/Projects"
+		bundleFile = "bundle.tar.gz"
+	)
+
+	log.Info().Msg("Setting up OPA client")
+	config := fmt.Sprintf(`
+	{
+	   "labels": {
+	      "app": "%s",
+	      "region": "us-east-2",
+	      "environment": "%s"
+	   },
+	   "bundles": {
+	      "local": {
+	         "resource": "file:///%s/%s"
+	      }
+	   }
+	}`, serviceName, env, bundleRoot, bundleFile)
+	// TODO this can block indefinitely, use channel to signal completion and set timeout
+	opaSDK, err := sdk.New(context.Background(), sdk.Options{
+		ID:     fmt.Sprintf("%s-%s", serviceName, env),
+		Config: bytes.NewReader([]byte(config)),
+	})
+	if err != nil {
+		log.Err(err).Msg("Error creating OPA SDK client")
+		os.Exit(1)
+	}
+	log.Info().Msg("Successfully created OPA SDK client")
+	return client.NewClient(opaSDK)
 }
