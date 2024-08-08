@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
+	"github.com/marqeta/pr-bot-cli/internal/reportManager"
 	"github.com/marqeta/pr-bot/configstore"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pid "github.com/marqeta/pr-bot/id"
@@ -166,7 +167,8 @@ func setUpOPAEvaluator(api pgithub.API) opa.Evaluator {
 	modules := FindOPAModules()
 	policy := setUpOPAPolicies(client)
 	factory := setUpInputFactory(api)
-	return opa.NewEvaluator(modules, policy, factory, nil)
+	manager := &reportManager.ReportManager{}
+	return opa.NewEvaluator(modules, policy, factory, manager)
 }
 
 func setUpOPAClient() client.Client {
