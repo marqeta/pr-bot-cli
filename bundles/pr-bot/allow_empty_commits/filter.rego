@@ -2,9 +2,8 @@ package prbot.allow_empty_commits
 
 import future.keywords
 
-schema {
-  "v1"
-}
+# version of pr bot schema version the policies are authored in
+schema := "v1"
 
 default track := false
 
