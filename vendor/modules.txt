@@ -93,6 +93,11 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb/types
 # github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.20.1
 ## explicit; go 1.20
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types
+# github.com/aws/aws-sdk-go-v2/service/ecr v1.24.5
+## explicit; go 1.19
+github.com/aws/aws-sdk-go-v2/service/ecr
+github.com/aws/aws-sdk-go-v2/service/ecr/internal/endpoints
+github.com/aws/aws-sdk-go-v2/service/ecr/types
 # github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1
 ## explicit; go 1.20
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding
@@ -306,10 +311,12 @@ github.com/marqeta/pr-bot/errors
 github.com/marqeta/pr-bot/github
 github.com/marqeta/pr-bot/id
 github.com/marqeta/pr-bot/metrics
+github.com/marqeta/pr-bot/oci
 github.com/marqeta/pr-bot/opa
 github.com/marqeta/pr-bot/opa/client
 github.com/marqeta/pr-bot/opa/evaluation
 github.com/marqeta/pr-bot/opa/input
+github.com/marqeta/pr-bot/opa/input/plugins
 github.com/marqeta/pr-bot/opa/rules
 github.com/marqeta/pr-bot/opa/types
 github.com/marqeta/pr-bot/pullrequest
@@ -782,6 +789,7 @@ gopkg.in/yaml.v3
 ## explicit; go 1.20
 oras.land/oras-go/v2
 oras.land/oras-go/v2/content
+oras.land/oras-go/v2/content/file
 oras.land/oras-go/v2/content/oci
 oras.land/oras-go/v2/errdef
 oras.land/oras-go/v2/internal/cas
@@ -791,16 +799,19 @@ oras.land/oras-go/v2/internal/descriptor
 oras.land/oras-go/v2/internal/docker
 oras.land/oras-go/v2/internal/fs/tarfs
 oras.land/oras-go/v2/internal/graph
+oras.land/oras-go/v2/internal/httputil
 oras.land/oras-go/v2/internal/interfaces
 oras.land/oras-go/v2/internal/ioutil
 oras.land/oras-go/v2/internal/manifestutil
 oras.land/oras-go/v2/internal/platform
 oras.land/oras-go/v2/internal/registryutil
 oras.land/oras-go/v2/internal/resolver
+oras.land/oras-go/v2/internal/slices
 oras.land/oras-go/v2/internal/spec
 oras.land/oras-go/v2/internal/status
 oras.land/oras-go/v2/internal/syncutil
 oras.land/oras-go/v2/registry
+oras.land/oras-go/v2/registry/remote
 oras.land/oras-go/v2/registry/remote/auth
 oras.land/oras-go/v2/registry/remote/errcode
 oras.land/oras-go/v2/registry/remote/internal/errutil

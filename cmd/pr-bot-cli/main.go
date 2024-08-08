@@ -109,12 +109,15 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 	log.Info().Msgf("ShouldHandle: %v", shouldHandle)
 
+	setUpOPAEvaluator(ghAPI)
+
 	reviewer := setupReviewer(ghAPI, emitter)
 	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
 	if err != nil {
 		log.Error().Msgf("Error creating comment: %v", err)
 		os.Exit(1)
 	}
+
 }
 
 func setupEventFilter(cfg *pullrequest.RepoFilterCfg, api pgithub.API) (pullrequest.EventFilter, error) {
