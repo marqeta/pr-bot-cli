@@ -23,6 +23,7 @@ WORKDIR /app
 COPY ./bundles .
 
 # Build OPA tar ball
+RUN apt-get update && apt-get install -y curl
 RUN curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static
 RUN chmod 755 ./opa
 RUN opa build ./bundles
