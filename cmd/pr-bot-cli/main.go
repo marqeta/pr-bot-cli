@@ -84,7 +84,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		Author:       event.GetPullRequest().GetUser().GetLogin(),
 		URL:          event.GetPullRequest().GetHTMLURL(),
 	}
-	fmt.Printf("Event name: %s\n, PR number: %d, owner: %s, repoName:%s \n", eventName, id.Number, id.Owner, id.RepoFullName)
+	log.Info().Interface("PR", id).Msg("Parsed PR")
 
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
@@ -96,7 +96,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	emitter := metrics.NewEmitter()
 	ghAPI := githubclient.NewAPI(v3Client, v4Client, emitter)
 
-	eventFilter, err := setupEventFilter(&pullrequest.RepoFilterCfg{}, ghAPI)
+	eventFilter, err := setupEventFilter(&pullrequest.RepoFilterCfg{Allowlist: []string{".*"}}, ghAPI)
 	if err != nil {
 		log.Error().Msgf("Error setting up event filter: %v", err)
 		os.Exit(1)
@@ -118,6 +118,11 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 }
 
 func setupEventFilter(cfg *pullrequest.RepoFilterCfg, api pgithub.API) (pullrequest.EventFilter, error) {
+	err := cfg.Update()
+	if err != nil {
+		return nil, err
+	}
+
 	cs, err := configstore.NewInMemoryStore[*pullrequest.RepoFilterCfg](cfg)
 	if err != nil {
 		return nil, err
