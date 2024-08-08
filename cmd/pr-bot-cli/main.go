@@ -153,7 +153,7 @@ const (
 	serviceName = "pr-bot"
 	env         = "github-action"
 	bundleRoot  = "/opt/app/bundles"
-	bundleFile  = "bundle.tar.gz"
+	bundleFile  = "pr-bot-policy.tar.gz"
 )
 
 func setUpOPAEvaluator(api pgithub.API) opa.Evaluator {
