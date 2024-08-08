@@ -16,6 +16,19 @@ COPY . .
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pr-bot-cli ./cmd/pr-bot-cli/main.go
 
+FROM debian:12.5-slim as opa-builder
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y curl && \
+    curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static && \
+    chmod 755 ./opa
+
+COPY ./bundles ./bundles
+
+# Attempt to build the bundles
+RUN ./opa build ./bundles -o /app/pr-bot-policy.tar.gz
+
 # Start a new stage from debian base image
 FROM debian:12.5-slim
 
@@ -27,6 +40,9 @@ RUN mkdir -p /opt/app/bundles
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/pr-bot-cli /opt/app/pr-bot-cli
+
+# Copy the OPA bundles tar ball
+COPY --from=opa-builder /app/pr-bot-policy.tar.gz /opt/app/bundles/pr-bot-policy.tar.gz
 
 # Copy the config directory
 COPY --from=builder /app/config /opt/app/config
