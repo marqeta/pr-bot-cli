@@ -15,7 +15,7 @@ COPY . .
 
 # Build OPA tar ball
 ENV OPA_VERSION=0.51.0
-RUN curl -L -X GET "https://artifactory.artifacts-prod.ci.marqeta.io:443/artifactory/opa-binaries/v${OPA_VERSION}/opa_linux_amd64_static" --output /usr/local/bin/opa
+RUN curl -L -X GET "https://github.com/open-policy-agent/opa/releases/download/v${OPA_VERSION}/opa_linux_amd64" --output /usr/local/bin/opa
 RUN chmod +x /usr/local/bin/opa
 RUN opa build ./bundles
 
