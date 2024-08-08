@@ -20,13 +20,14 @@ FROM debian:12.5-slim as opa-builder
 
 WORKDIR /app
 
-COPY ./bundles .
+RUN apt-get update && apt-get install -y curl && \
+    curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static && \
+    chmod 755 ./opa
 
-# Build OPA tar ball
-RUN apt-get update && apt-get install -y curl
-RUN curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static
-RUN chmod 755 ./opa
-RUN ./opa build ./bundles
+COPY ./bundles ./bundles
+
+# Attempt to build the bundles
+RUN ./opa build ./bundles -o /app/bundles.tar.gz
 
 # Start a new stage from debian base image
 FROM debian:12.5-slim
@@ -41,7 +42,7 @@ RUN mkdir -p /opt/app/bundles
 COPY --from=builder /app/pr-bot-cli /opt/app/pr-bot-cli
 
 # Copy the OPA bundles tar ball
-COPY --from=opa-builder /app/bundles/bundles.tar.gz /opt/app/bundles/bundles.tar.gz
+COPY --from=opa-builder /app/bundles.tar.gz /opt/app/bundles/bundles.tar.gz
 
 # Copy the config directory
 COPY --from=builder /app/config /opt/app/config
