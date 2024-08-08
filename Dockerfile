@@ -26,7 +26,7 @@ COPY ./bundles .
 RUN apt-get update && apt-get install -y curl
 RUN curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static
 RUN chmod 755 ./opa
-RUN opa build ./bundles
+RUN ./opa build ./bundles
 
 # Start a new stage from debian base image
 FROM debian:12.5-slim
