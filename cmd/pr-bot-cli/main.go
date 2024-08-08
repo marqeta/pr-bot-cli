@@ -8,9 +8,11 @@ import (
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
+	"github.com/marqeta/pr-bot/configstore"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pid "github.com/marqeta/pr-bot/id"
 	pmetrics "github.com/marqeta/pr-bot/metrics"
+	"github.com/marqeta/pr-bot/pullrequest"
 	"github.com/marqeta/pr-bot/pullrequest/review"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -93,13 +95,34 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	v3Client, v4Client := githubclient.CreateGithubClients(cmd.Context(), tok)
 	emitter := metrics.NewEmitter()
 	ghAPI := githubclient.NewAPI(v3Client, v4Client, emitter)
-	reviewer := setupReviewer(ghAPI, emitter)
 
+	eventFilter, err := setupEventFilter(&pullrequest.RepoFilterCfg{}, ghAPI)
+	if err != nil {
+		log.Error().Msgf("Error setting up event filter: %v", err)
+		os.Exit(1)
+	}
+
+	shouldHandle, err := eventFilter.ShouldHandle(cmd.Context(), id)
+	if err != nil {
+		log.Error().Msgf("Error invoking event filter: %v", err)
+		os.Exit(1)
+	}
+	log.Info().Msgf("ShouldHandle: %v", shouldHandle)
+
+	reviewer := setupReviewer(ghAPI, emitter)
 	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
 	if err != nil {
 		log.Error().Msgf("Error creating comment: %v", err)
 		os.Exit(1)
 	}
+}
+
+func setupEventFilter(cfg *pullrequest.RepoFilterCfg, api pgithub.API) (pullrequest.EventFilter, error) {
+	cs, err := configstore.NewInMemoryStore[*pullrequest.RepoFilterCfg](cfg)
+	if err != nil {
+		return nil, err
+	}
+	return pullrequest.NewRepoFilter(cs, api), nil
 }
 
 func setupReviewer(api pgithub.API, emitter pmetrics.Emitter) review.Reviewer {
