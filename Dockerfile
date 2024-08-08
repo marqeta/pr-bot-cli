@@ -35,7 +35,7 @@ COPY --from=builder /app/pr-bot-cli /opt/app/pr-bot-cli
 COPY config /opt/app/config
 
 # Copy start-up script
-COPY --chmod=755 action/pr_bot_action.sh /opt/app/pr_bot_action.sh
+COPY action/pr_bot_action.sh /opt/app/pr_bot_action.sh
 
 RUN useradd -ms /bin/bash pr-bot
 RUN chown -R pr-bot /opt/app
