@@ -1,4 +1,4 @@
-package allow_empty_commits
+package prbot.allow_empty_commits
 
 import future.keywords
 
