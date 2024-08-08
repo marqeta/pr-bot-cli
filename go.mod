@@ -6,6 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/go-github/v50 v50.2.0
 	github.com/marqeta/pr-bot v0.0.0-20240718214251-a4412ce5f91e
+	github.com/open-policy-agent/opa v0.60.0
 	github.com/rs/zerolog v1.31.0
 	github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7
 	github.com/slok/go-http-metrics v0.12.0
@@ -17,6 +18,7 @@ require (
 require (
 	cirello.io/dynamolock/v2 v2.0.3 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
@@ -26,14 +28,24 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.25.2 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.25.5 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.6 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.17.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.25.4 // indirect
 	github.com/aws/smithy-go v1.20.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytecodealliance/wasmtime-go/v3 v3.0.2 // indirect
@@ -69,8 +81,10 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
+	github.com/ilyakaznacheev/cleanenv v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -79,7 +93,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
-	github.com/open-policy-agent/opa v0.60.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -125,6 +138,7 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 	oras.land/oras-go/v2 v2.3.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )

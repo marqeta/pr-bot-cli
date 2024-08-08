@@ -1,25 +1,39 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/marqeta/pr-bot-cli/internal/evaluation"
+
 	"github.com/google/go-github/v50/github"
+	prbot "github.com/marqeta/pr-bot"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
 	"github.com/marqeta/pr-bot/configstore"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pid "github.com/marqeta/pr-bot/id"
 	pmetrics "github.com/marqeta/pr-bot/metrics"
+	"github.com/marqeta/pr-bot/oci"
+	"github.com/marqeta/pr-bot/opa"
+	"github.com/marqeta/pr-bot/opa/client"
+	peval "github.com/marqeta/pr-bot/opa/evaluation"
+	"github.com/marqeta/pr-bot/opa/input"
+	"github.com/marqeta/pr-bot/opa/input/plugins"
 	"github.com/marqeta/pr-bot/pullrequest"
 	"github.com/marqeta/pr-bot/pullrequest/review"
+	"github.com/open-policy-agent/opa/sdk"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-var configFile string
+var (
+	configFile string
+)
 
 func main() {
 	rootCmd := &cobra.Command{
@@ -109,6 +123,9 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 	log.Info().Msgf("ShouldHandle: %v", shouldHandle)
 
+	evaluator := setUpOPAEvaluator(ghAPI, &prbot.Config{}, &evaluation.NoopManager{})
+	log.Debug().Interface("evaluator", evaluator).Msg("Evaluator created")
+
 	reviewer := setupReviewer(ghAPI, emitter)
 	err = reviewer.Comment(cmd.Context(), id, "👋 Thanks for opening this pull request! PR Bot will auto-approve if it can.")
 	if err != nil {
@@ -128,6 +145,74 @@ func setupEventFilter(cfg *pullrequest.RepoFilterCfg, api pgithub.API) (pullrequ
 		return nil, err
 	}
 	return pullrequest.NewRepoFilter(cs, api), nil
+}
+
+func setUpOPAEvaluator(api pgithub.API, cfg *prbot.Config, manager peval.Manager) opa.Evaluator {
+	log.Info().Msg("Setting up OPA evaluator")
+	opaClient := setUpOPAClient(cfg)
+	modules := FindOPAModules(cfg)
+	policy := setUpOPAPolicies(opaClient)
+	factory := setUpInputFactory(api)
+	return opa.NewEvaluator(modules, policy, factory, manager)
+}
+
+func setUpOPAClient(cfg *prbot.Config) client.Client {
+	log.Info().Msg("Setting up OPA client")
+	config := fmt.Sprintf(`
+	{
+	   "labels": {
+	      "app": "%s",
+	      "region": "us-east-2",
+	      "environment": "%s"
+	   },
+	   "bundles": {
+	      "local": {
+	         "resource": "file:///%s/%s"
+	      }
+	   }
+	}`, cfg.ServiceName, cfg.Env, cfg.OPA.Bundles.Root, cfg.OPA.Bundles.Filename)
+	// TODO this can block indefinitely, use channel to signal completion and set timeout
+	opaSDK, err := sdk.New(context.Background(), sdk.Options{
+		ID:     fmt.Sprintf("%s-%s", cfg.ServiceName, cfg.Env),
+		Config: bytes.NewReader([]byte(config)),
+	})
+	if err != nil {
+		log.Err(err).Msg("Error creating OPA SDK client")
+		os.Exit(1)
+	}
+	log.Info().Msg("Successfully created OPA SDK client")
+	return client.NewClient(opaSDK)
+}
+
+func FindOPAModules(cfg *prbot.Config) []string {
+	log.Info().Msg("Finding OPA modules")
+	reader := oci.NewReader()
+	filepath := fmt.Sprintf("%s/%s", cfg.OPA.Bundles.Root, cfg.OPA.Bundles.Filename)
+	dirs, err := reader.ListDirs(context.Background(), filepath)
+	if err != nil {
+		log.Err(err).Msg("Error reading OPA bundle directories")
+		os.Exit(1)
+	}
+	modules := reader.FilterModules(context.Background(), dirs)
+	log.Info().Interface("Modules", modules).Msg("Found OPA modules")
+	return modules
+}
+
+func setUpOPAPolicies(opaClient client.Client) opa.Policy {
+	log.Info().Msg("Setting up OPA policies")
+	v1 := opa.NewV1Policy(opaClient)
+	return opa.NewVersionedPolicy(
+		map[string]opa.Policy{"v1": v1},
+		opaClient,
+	)
+}
+
+func setUpInputFactory(api pgithub.API) input.Factory {
+	log.Info().Msg("Setting up input factory")
+	branchProtection := plugins.NewBranchProtection(api)
+	// 100KB size limit
+	filesChanged := plugins.NewFilesChanged(api, 100*1000)
+	return input.NewFactory(branchProtection, filesChanged)
 }
 
 func setupReviewer(api pgithub.API, emitter pmetrics.Emitter) review.Reviewer {
