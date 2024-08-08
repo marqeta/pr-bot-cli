@@ -13,14 +13,20 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pr-bot-cli ./cmd/pr-bot-cli/main.go
+
+FROM debian:12.5-slim as opa-builder
+
+WORKDIR /app
+
+COPY ./bundles .
+
 # Build OPA tar ball
 ENV OPA_VERSION=0.51.0
 RUN curl -L -X GET "https://github.com/open-policy-agent/opa/releases/download/v${OPA_VERSION}/opa_linux_amd64" --output /usr/local/bin/opa
 RUN chmod +x /usr/local/bin/opa
 RUN opa build ./bundles
-
-# Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pr-bot-cli ./cmd/pr-bot-cli/main.go
 
 # Start a new stage from debian base image
 FROM debian:12.5-slim
@@ -35,7 +41,7 @@ RUN mkdir -p /opt/app/bundles
 COPY --from=builder /app/pr-bot-cli /opt/app/pr-bot-cli
 
 # Copy the OPA bundles tar ball
-COPY --from=builder /app/bundles/bundles.tar.gz /opt/app/bundles/bundles.tar.gz
+COPY --from=opa-builder /app/bundles/bundles.tar.gz /opt/app/bundles/bundles.tar.gz
 
 # Copy the config directory
 COPY --from=builder /app/config /opt/app/config
