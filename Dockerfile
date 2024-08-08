@@ -23,9 +23,8 @@ WORKDIR /app
 COPY ./bundles .
 
 # Build OPA tar ball
-ENV OPA_VERSION=0.51.0
-RUN curl -L -X GET "https://github.com/open-policy-agent/opa/releases/download/v${OPA_VERSION}/opa_linux_amd64" --output /usr/local/bin/opa
-RUN chmod +x /usr/local/bin/opa
+RUN curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_linux_amd64_static
+RUN chmod 755 ./opa
 RUN opa build ./bundles
 
 # Start a new stage from debian base image
