@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
-	"github.com/marqeta/pr-bot-cli/internal/reportManager"
+	"github.com/marqeta/pr-bot-cli/internal/reportmanager"
 	"github.com/marqeta/pr-bot/configstore"
 	pgithub "github.com/marqeta/pr-bot/github"
-	pid "github.com/marqeta/pr-bot/id"
 	pmetrics "github.com/marqeta/pr-bot/metrics"
 	"github.com/marqeta/pr-bot/oci"
 	"github.com/marqeta/pr-bot/opa"
@@ -58,6 +59,8 @@ func main() {
 }
 
 func evaluatePullRequest(cmd *cobra.Command, _ []string) {
+	ctx := context.WithValue(cmd.Context(), middleware.LogEntryCtxKey, &httplog.RequestLoggerEntry{Logger: log.Logger})
+
 	// get the GitHub event path
 	eventPath := os.Getenv("GITHUB_EVENT_PATH")
 	if eventPath == "" {
@@ -84,24 +87,13 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	id := pid.PR{
-		Owner:        event.GetRepo().GetOwner().GetLogin(),
-		Repo:         event.GetRepo().GetName(),
-		Number:       event.GetPullRequest().GetNumber(),
-		NodeID:       event.GetPullRequest().GetNodeID(),
-		RepoFullName: event.GetRepo().GetFullName(),
-		Author:       event.GetPullRequest().GetUser().GetLogin(),
-		URL:          event.GetPullRequest().GetHTMLURL(),
-	}
-	log.Info().Interface("PR", id).Msg("Parsed PR")
-
 	log.Info().Msg("Setting up GHE clients")
 	tok := os.Getenv("GITHUB_TOKEN")
 	if tok == "" {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
 	}
-	v3Client, v4Client := githubclient.CreateGithubClients(cmd.Context(), tok)
+	v3Client, v4Client := githubclient.CreateGithubClients(ctx, tok)
 	emitter := metrics.NewEmitter()
 	ghAPI := githubclient.NewAPI(v3Client, v4Client, emitter)
 
@@ -111,15 +103,11 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		os.Exit(1)
 	}
 
-	opa := setUpOPAEvaluator(ghAPI)
-	ghe := input.ToGHE(&event)
-	opaResult, err := opa.Evaluate(cmd.Context(), ghe)
-	log.Info().Msg(fmt.Sprintf("OPA Result: %v", opaResult))
-
+	evaluator := setUpOPAEvaluator(ctx, ghAPI)
 	reviewer := setupReviewer(ghAPI, emitter)
-	handler := pullrequest.NewEventHandler(opa, reviewer, emitter)
+	handler := pullrequest.NewEventHandler(evaluator, reviewer, emitter)
 	d := pullrequest.NewDispatcher(handler, eventFilter, emitter)
-	err = d.Dispatch(cmd.Context(), "", eventName, &event)
+	err = d.Dispatch(ctx, "", eventName, &event)
 	if err != nil {
 		log.Error().Msgf("Error reviewing the PR: %v", err)
 		os.Exit(1)
@@ -154,18 +142,18 @@ const (
 	bundleFile  = "pr-bot-policy.tar.gz"
 )
 
-func setUpOPAEvaluator(api pgithub.API) opa.Evaluator {
+func setUpOPAEvaluator(ctx context.Context, api pgithub.API) opa.Evaluator {
 	log.Info().Msg("Setting up OPA evaluator")
-	client := setUpOPAClient()
+	opaClient := setUpOPAClient(ctx)
 	log.Info().Msg("Successfully setup OPA client")
-	modules := FindOPAModules()
-	policy := setUpOPAPolicies(client)
+	modules := FindOPAModules(ctx)
+	policy := setUpOPAPolicies(opaClient)
 	factory := setUpInputFactory(api)
-	manager := &reportManager.ReportManager{}
+	manager := &reportmanager.ReportManager{}
 	return opa.NewEvaluator(modules, policy, factory, manager)
 }
 
-func setUpOPAClient() client.Client {
+func setUpOPAClient(ctx context.Context) client.Client {
 	log.Info().Msg("Setting up OPA client")
 	config := fmt.Sprintf(`
 	{
@@ -181,7 +169,7 @@ func setUpOPAClient() client.Client {
 	   }
 	}`, serviceName, env, bundleRoot, bundleFile)
 	// TODO this can block indefinitely, use channel to signal completion and set timeout
-	opaSDK, err := sdk.New(context.Background(), sdk.Options{
+	opaSDK, err := sdk.New(ctx, sdk.Options{
 		ID:     fmt.Sprintf("%s-%s", serviceName, env),
 		Config: bytes.NewReader([]byte(config)),
 	})
@@ -193,16 +181,16 @@ func setUpOPAClient() client.Client {
 	return client.NewClient(opaSDK)
 }
 
-func FindOPAModules() []string {
+func FindOPAModules(ctx context.Context) []string {
 	log.Info().Msg("Finding OPA modules")
 	reader := oci.NewReader()
 	filepath := fmt.Sprintf("%s/%s", bundleRoot, bundleFile)
-	dirs, err := reader.ListDirs(context.Background(), filepath)
+	dirs, err := reader.ListDirs(ctx, filepath)
 	if err != nil {
 		log.Err(err).Msg("Error reading OPA bundle directories")
 		os.Exit(1)
 	}
-	modules := reader.FilterModules(context.Background(), dirs)
+	modules := reader.FilterModules(ctx, dirs)
 	log.Info().Interface("Modules", modules).Msg("Found OPA modules")
 	return modules
 }
