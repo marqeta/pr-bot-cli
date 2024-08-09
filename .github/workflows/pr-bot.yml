@@ -7,7 +7,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      administration: read
+      contents: read
+      metadata: read
+      pull-requests: write
+      statuses: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
