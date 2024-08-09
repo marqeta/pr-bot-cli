@@ -25,7 +25,6 @@ import (
 	"github.com/marqeta/pr-bot/pullrequest/review"
 	"github.com/open-policy-agent/opa/sdk"
 	"github.com/rs/zerolog/log"
-	"github.com/sethvargo/go-githubactions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -89,8 +88,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 
 	log.Info().Msg("Setting up GHE clients")
-	//tok := os.Getenv("INPUT_GITHUB-TOKEN")
-	tok := githubactions.GetInput("github-token")
+	tok := os.Getenv("INPUT_GITHUB-TOKEN")
 	if tok == "" {
 		log.Error().Msg("github-token not set as an input in the workflow")
 		os.Exit(1)
