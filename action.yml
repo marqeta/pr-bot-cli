@@ -1,5 +1,12 @@
 name: 'pr-bot'
 description: 'A GitHub Action that automatically approves PR that meets certain requirement'
+
+inputs:
+  GitHubToken:
+    description: 'GitHub token'
+    required: true
+    default: ${{ github.token }}
+
 runs:
   using: 'docker'
   image: 'Dockerfile'
