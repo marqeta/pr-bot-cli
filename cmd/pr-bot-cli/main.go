@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/marqeta/pr-bot-cli/internal/reportmanager"
 	"os"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,7 +13,6 @@ import (
 	"github.com/google/go-github/v50/github"
 	"github.com/marqeta/pr-bot-cli/internal/githubclient"
 	"github.com/marqeta/pr-bot-cli/internal/metrics"
-	"github.com/marqeta/pr-bot-cli/internal/reportmanager"
 	"github.com/marqeta/pr-bot/configstore"
 	pgithub "github.com/marqeta/pr-bot/github"
 	pmetrics "github.com/marqeta/pr-bot/metrics"

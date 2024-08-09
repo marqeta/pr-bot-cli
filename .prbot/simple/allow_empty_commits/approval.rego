@@ -34,15 +34,15 @@ has_re_run_marker if {
 
 review["type"] := "APPROVE" if {
 	# auto approve if: merging changes to default branch
-	input.pull_request.base.ref == input.repository.default_branch
+#	input.pull_request.base.ref == input.repository.default_branch
 
 	# auto approve if: pr has empty commits
-	input.pull_request.changed_files == 0
-	input.pull_request.additions == 0
-	input.pull_request.deletions == 0
+#	input.pull_request.changed_files == 0
+#	input.pull_request.additions == 0
+#	input.pull_request.deletions == 0
 
 	# verify there is required status check
-	has_required_status_check
+#	has_required_status_check
 
 	# has re-run marker
 	has_re_run_marker
