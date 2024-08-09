@@ -88,9 +88,9 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 
 	log.Info().Msg("Setting up GHE clients")
-	tok := os.Getenv("INPUT_GITHUB_TOKEN")
+	tok := os.Getenv("INPUT_GITHUB-TOKEN")
 	if tok == "" {
-		log.Error().Msg("GITHUB_TOKEN not set as an input in the workflow")
+		log.Error().Msg("github-token not set as an input in the workflow")
 		os.Exit(1)
 	}
 	v3Client, v4Client := githubclient.CreateGithubClients(ctx, tok)

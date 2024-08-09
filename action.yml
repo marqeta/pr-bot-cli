@@ -2,7 +2,7 @@ name: 'pr-bot'
 description: 'A GitHub Action that automatically approves PR that meets certain requirement'
 
 inputs:
-  github_token:
+  github-token:
     description: 'GitHub token'
     required: true
     default: ${{ github.token }}
