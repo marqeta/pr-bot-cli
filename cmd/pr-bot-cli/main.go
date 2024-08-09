@@ -88,7 +88,7 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 	}
 
 	log.Info().Msg("Setting up GHE clients")
-	tok := os.Getenv("GITHUB_TOKEN")
+	tok := os.Getenv("INPUT_GITHUB_TOKEN")
 	if tok == "" {
 		log.Error().Msg("GITHUB_TOKEN not set")
 		os.Exit(1)
