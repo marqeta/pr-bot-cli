@@ -1,7 +1,7 @@
 name: PR bot GitHub APP
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled, review_requested, review_request_removed, assigned, unassigned, synchronize]
 
 jobs:
