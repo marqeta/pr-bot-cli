@@ -503,6 +503,9 @@ github.com/rs/zerolog/log
 # github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 ## explicit
 github.com/samuel/go-zookeeper/zk
+# github.com/sethvargo/go-githubactions v1.2.0
+## explicit; go 1.21
+github.com/sethvargo/go-githubactions
 # github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7
 ## explicit; go 1.19
 github.com/shurcooL/githubv4

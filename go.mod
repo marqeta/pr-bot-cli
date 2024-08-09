@@ -4,10 +4,12 @@ go 1.22.4
 
 require (
 	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-chi/httplog v0.3.2
 	github.com/google/go-github/v50 v50.2.0
 	github.com/marqeta/pr-bot v0.0.0-20240718214251-a4412ce5f91e
 	github.com/open-policy-agent/opa v0.60.0
 	github.com/rs/zerolog v1.31.0
+	github.com/sethvargo/go-githubactions v1.2.0
 	github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7
 	github.com/slok/go-http-metrics v0.12.0
 	github.com/spf13/cobra v1.8.1
@@ -50,7 +52,6 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-chi/httplog v0.3.2 // indirect
 	github.com/go-chi/render v1.0.3 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
