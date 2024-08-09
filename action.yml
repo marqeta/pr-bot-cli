@@ -4,8 +4,7 @@ description: 'A GitHub Action that automatically approves PR that meets certain 
 inputs:
   github-token:
     description: 'GitHub token'
-    required: true
-    default: ${{ github.token }}
+    required: false
 
 runs:
   using: 'docker'
