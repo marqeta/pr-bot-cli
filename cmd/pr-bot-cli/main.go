@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -94,8 +93,6 @@ func evaluatePullRequest(cmd *cobra.Command, _ []string) {
 		log.Error().Msg("github-token not set as an input in the workflow")
 		os.Exit(1)
 	}
-	h := sha256.New()
-	log.Info().Msg(fmt.Sprintf("Sha256 of tok: %x", h.Sum([]byte(tok))))
 	v3Client, v4Client := githubclient.CreateGithubClients(ctx, tok)
 	emitter := metrics.NewEmitter()
 	ghAPI := githubclient.NewAPI(v3Client, v4Client, emitter)
