@@ -1,7 +1,9 @@
 # PR-Bot-Cli
 `Name`: marqeta/pr-bot-cli@main
 
-PR Bot Cli is a GitHub Action that automatically approves PRs when user-defined reuqirements are met. If `auto-merge` is enabled at repository level, PRs could get auto merged as well.
+PR Bot Cli is a GitHub Action that automatically approves PRs when user-defined reuqirements are met. 
+
+`Important`: `Allow auto-merge` must be enabled for PR Bot Cli to work.
 
 ## How to Use in GitHub Workflow. 
 GitHub Workflow is a user-configurable automated process to run CI/CD jobs. 
@@ -13,6 +15,8 @@ To use PR Bot Cli, you would first need to create a GitHub Personal Access Token
 
 Click on your profile picture at top right corner, go to `settings` -> `developer settings` -> `personal access token` -> `fine-grained tokens`, click on the `generate new token`.
 
+`Repo read-only` and `read:org` permissions should be enough for PR Bot Cli to work.
+
 Remmeber to copy your personal access token as you woould need to use in the next step.
 ### 2. Store Personal Access Token as Repository Secret
 Go to your repository, click on `settings`.
@@ -21,7 +25,13 @@ Go to your repository, click on `settings`.
 
 Go to `Secrets and variables` -> `actions` -> `New Repository Secrets`. Create a new secret paste your newly created GitHub token as its value, and set its name to `PR_BOT_TOKEN`.
 
-### 3. Invoke GitHub Action
+### 3. Enable Auto Merge for Repo
+Go to `settings` -> `general`, enable `allow auto-merge`.
+
+<img width="450" alt="image" src="https://github.com/user-attachments/assets/f06a05fa-446b-40f6-b068-2db9cb0c50c9">
+
+
+### 4. Invoke GitHub Action
 Create a `.github/prbot.yml` under root directory of your repository. 
 ```
 name: PR Bot auto approval
